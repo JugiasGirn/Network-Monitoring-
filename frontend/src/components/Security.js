@@ -1,8 +1,20 @@
 import React, { useState, useEffect } from "react";
 import styled from "styled-components";
 import { motion } from "framer-motion";
-import { LineChart, BarChart, XAxis, YAxis, Tooltip, Legend, Line, Bar, CartesianGrid, ResponsiveContainer } from 'recharts';
-import { BarChart2, Clock, Activity, TrendingUp, Filter, ArrowUpRight, ArrowDownRight, RefreshCw, Download, ChevronDown } from 'lucide-react';
+import { BarChart, XAxis, YAxis, Tooltip, Bar, CartesianGrid, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import { 
+  Shield, 
+  AlertTriangle, 
+  Clock, 
+  Server, 
+  RefreshCw, 
+  Download, 
+  Filter, 
+  ArrowUpRight, 
+  Database, 
+  Lock,
+  Zap
+} from 'lucide-react';
 import { API_BASE_URL } from "../app";
 
 // Styled Components
@@ -29,10 +41,10 @@ const HeaderContent = styled.div`
   h1 {
     font-size: 2.5rem;
     margin-bottom: 0.5rem;
-    background: linear-gradient(90deg, #00b4d8, #90e0ef);
+    background: linear-gradient(90deg, #ff5e62, #ff9966);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
-    text-shadow: 0 0 30px rgba(0, 180, 216, 0.5);
+    text-shadow: 0 0 30px rgba(255, 94, 98, 0.5);
   }
 
   p {
@@ -55,7 +67,7 @@ const TimeButton = styled.button`
   padding: 0.5rem 1rem;
   border-radius: 8px;
   border: none;
-  background: ${props => props.active ? 'rgba(0, 180, 216, 0.2)' : 'transparent'};
+  background: ${props => props.active ? 'rgba(255, 94, 98, 0.2)' : 'transparent'};
   color: ${props => props.active ? 'var(--primary)' : 'var(--text-tertiary)'};
   font-weight: 600;
   cursor: pointer;
@@ -64,6 +76,130 @@ const TimeButton = styled.button`
   
   &:hover {
     color: ${props => props.active ? 'var(--primary)' : 'var(--text-secondary)'};
+  }
+`;
+
+const SecurityScoreCard = styled(motion.div)`
+  background: rgba(26, 26, 46, 0.6);
+  backdrop-filter: blur(10px);
+  border-radius: 12px;
+  padding: 2rem;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  margin-bottom: 2rem;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 3px;
+    background: ${props => {
+      if (props.score >= 80) return 'var(--success)';
+      if (props.score >= 60) return 'var(--warning)';
+      return 'var(--danger)';
+    }};
+    box-shadow: 0 0 10px ${props => {
+      if (props.score >= 80) return 'var(--success)';
+      if (props.score >= 60) return 'var(--warning)';
+      return 'var(--danger)';
+    }};
+  }
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+    gap: 2rem;
+  }
+`;
+
+const ScoreInfo = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+
+  .score-circle {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: ${props => {
+      if (props.score >= 80) return 'var(--success)';
+      if (props.score >= 60) return 'var(--warning)';
+      return 'var(--danger)';
+    }};
+    background: radial-gradient(
+      circle,
+      rgba(26, 26, 46, 0.8) 0%,
+      rgba(26, 26, 46, 0.6) 100%
+    );
+    border: 2px solid ${props => {
+      if (props.score >= 80) return 'var(--success)';
+      if (props.score >= 60) return 'var(--warning)';
+      return 'var(--danger)';
+    }};
+    box-shadow: 0 0 20px ${props => {
+      if (props.score >= 80) return 'rgba(52, 211, 153, 0.3)';
+      if (props.score >= 60) return 'rgba(251, 191, 36, 0.3)';
+      return 'rgba(239, 68, 68, 0.3)';
+    }};
+  }
+
+  .score-details {
+    h2 {
+      font-size: 1.8rem;
+      margin-bottom: 0.5rem;
+      color: ${props => {
+        if (props.score >= 80) return 'var(--success)';
+        if (props.score >= 60) return 'var(--warning)';
+        return 'var(--danger)';
+      }};
+    }
+
+    p {
+      color: var(--text-secondary);
+      font-size: 1rem;
+      max-width: 350px;
+    }
+  }
+`;
+
+const SecurityMetrics = styled.div`
+  display: flex;
+  gap: 2rem;
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+    gap: 1rem;
+  }
+`;
+
+const MetricItem = styled.div`
+  text-align: center;
+
+  .metric-value {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 0.3rem;
+  }
+
+  .metric-label {
+    font-size: 0.85rem;
+    color: var(--text-tertiary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
   }
 `;
 
@@ -145,7 +281,7 @@ const StatTrend = styled.div`
   }
 `;
 
-const ChartsGrid = styled.div`
+const SecurityChartGrid = styled.div`
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 1.5rem;
@@ -206,106 +342,207 @@ const ChartContent = styled.div`
   padding: 1.5rem;
 `;
 
-const LegendContainer = styled.div`
+const AlertsTable = styled.div`
+  width: 100%;
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 2rem;
+  background: rgba(26, 26, 46, 0.6);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+`;
+
+const TableHeader = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1rem;
-`;
+  padding: 1.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 
-const LegendItem = styled.div`
-  display: flex;
-  align-items: center;
-  font-size: 0.8rem;
-  color: var(--text-tertiary);
-
-  &:not(:last-child) {
-    margin-right: 1rem;
-  }
-
-  .indicator {
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    margin-right: 0.5rem;
-    background: ${props => props.color};
-    box-shadow: 0 0 5px ${props => props.color};
+  h3 {
+    color: var(--danger);
+    font-size: 1.2rem;
+    margin: 0;
   }
 `;
 
-const DropdownButton = styled.button`
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.4rem 0.8rem;
-  background: rgba(255, 255, 255, 0.05);
-  color: var(--text-tertiary);
-  border: none;
-  border-radius: 6px;
-  font-size: 0.8rem;
-  cursor: pointer;
+const TableContent = styled.div`
+  overflow-x: auto;
+`;
 
-  &:hover {
-    background: rgba(255, 255, 255, 0.1);
+const Table = styled.table`
+  width: 100%;
+  border-collapse: collapse;
+  
+  th, td {
+    padding: 1rem 1.5rem;
+    text-align: left;
+  }
+  
+  th {
+    background: rgba(10, 10, 27, 0.6);
     color: var(--text-secondary);
+    font-weight: 600;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  
+  tr:not(:last-child) {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  }
+  
+  tbody tr {
+    transition: background 0.2s;
+    
+    &:hover {
+      background: rgba(255, 255, 255, 0.02);
+    }
   }
 `;
 
-// Generate sample data for testing
-const generateMockData = (timeframe) => {
-  // Traffic data
-  const trafficData = [];
-  const pointCount = timeframe === '24h' ? 24 : timeframe === '7d' ? 7 : 30;
-  
-  for (let i = 0; i < pointCount; i++) {
-    const timestamp = timeframe === '24h' 
-      ? `${i}:00` 
-      : timeframe === '7d' 
-        ? `Day ${i+1}`
-        : `Day ${i+1}`;
-    
-    trafficData.push({
-      timestamp,
-      requests: Math.floor(Math.random() * 2000) + 2000,
-      unique_visitors: Math.floor(Math.random() * 1000) + 1000
-    });
+const AlertBadge = styled.span`
+  display: inline-block;
+  padding: 0.3rem 0.7rem;
+  border-radius: 100px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: ${props => {
+    if (props.severity === 'Critical') return 'rgba(239, 68, 68, 0.2)';
+    if (props.severity === 'High') return 'rgba(251, 146, 60, 0.2)';
+    if (props.severity === 'Medium') return 'rgba(251, 191, 36, 0.2)';
+    return 'rgba(156, 163, 175, 0.2)';
+  }};
+  color: ${props => {
+    if (props.severity === 'Critical') return 'var(--danger)';
+    if (props.severity === 'High') return 'var(--warning)';
+    if (props.severity === 'Medium') return 'var(--warning-light)';
+    return 'var(--text-secondary)';
+  }};
+  border: 1px solid ${props => {
+    if (props.severity === 'Critical') return 'rgba(239, 68, 68, 0.3)';
+    if (props.severity === 'High') return 'rgba(251, 146, 60, 0.3)';
+    if (props.severity === 'Medium') return 'rgba(251, 191, 36, 0.3)';
+    return 'rgba(156, 163, 175, 0.3)';
+  }};
+`;
+
+const StatusBadge = styled.span`
+  display: inline-block;
+  padding: 0.3rem 0.7rem;
+  border-radius: 100px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: ${props => {
+    if (props.status === 'New') return 'rgba(239, 68, 68, 0.2)';
+    if (props.status === 'Investigating') return 'rgba(251, 191, 36, 0.2)';
+    if (props.status === 'Resolved') return 'rgba(52, 211, 153, 0.2)';
+    return 'rgba(156, 163, 175, 0.2)';
+  }};
+  color: ${props => {
+    if (props.status === 'New') return 'var(--danger)';
+    if (props.status === 'Investigating') return 'var(--warning)';
+    if (props.status === 'Resolved') return 'var(--success)';
+    return 'var(--text-secondary)';
+  }};
+  border: 1px solid ${props => {
+    if (props.status === 'New') return 'rgba(239, 68, 68, 0.3)';
+    if (props.status === 'Investigating') return 'rgba(251, 191, 36, 0.3)';
+    if (props.status === 'Resolved') return 'rgba(52, 211, 153, 0.3)';
+    return 'rgba(156, 163, 175, 0.3)';
+  }};
+`;
+
+const VulnerabilitiesGrid = styled(SecurityChartGrid)`
+  grid-template-columns: 2fr 1fr;
+
+  @media (max-width: 992px) {
+    grid-template-columns: 1fr;
   }
-  
-  // Response time data
-  const responseTimeData = trafficData.map(item => ({
-    timestamp: item.timestamp,
-    avg_response_time: Math.floor(Math.random() * 50) + 80,
-    p95_response_time: Math.floor(Math.random() * 100) + 150
-  }));
-  
-  // Status code data
-  const statusCodeData = [
-    { status_code: '200', count: Math.floor(Math.random() * 10000) + 20000 },
-    { status_code: '301', count: Math.floor(Math.random() * 1000) + 2000 },
-    { status_code: '404', count: Math.floor(Math.random() * 500) + 500 },
-    { status_code: '500', count: Math.floor(Math.random() * 200) + 100 },
-    { status_code: '403', count: Math.floor(Math.random() * 300) + 200 }
-  ];
-  
-  // Anomaly data
-  const anomalyData = [];
-  for (let i = 0; i < pointCount; i++) {
-    anomalyData.push({
-      timestamp: trafficData[i].timestamp,
-      anomaly_score: Math.floor(Math.random() * 100),
-      threshold: 70
-    });
+`;
+
+const AssetsList = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1.5rem;
+`;
+
+const AssetItem = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  background: rgba(10, 10, 27, 0.3);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.03);
+
+  .asset-info {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+
+    .asset-icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.05);
+      color: ${props => {
+        if (props.level === 'Critical') return 'var(--danger)';
+        if (props.level === 'High') return 'var(--warning)';
+        return 'var(--primary)';
+      }};
+    }
+
+    .asset-details {
+      h4 {
+        margin: 0 0 0.2rem;
+        font-size: 1rem;
+      }
+
+      .asset-type {
+        font-size: 0.8rem;
+        color: var(--text-tertiary);
+      }
+    }
   }
-  
-  return { trafficData, responseTimeData, statusCodeData, anomalyData };
-};
+
+  .asset-protection {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+
+    .protection-level {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: ${props => {
+        if (props.level === 'Critical') return 'var(--danger)';
+        if (props.level === 'High') return 'var(--warning)';
+        return 'var(--primary)';
+      }};
+    }
+  }
+`;
 
 // Main component
-const Analysis = () => {
-  const [trafficData, setTrafficData] = useState([]);
-  const [responseTimeData, setResponseTimeData] = useState([]);
-  const [statusCodeData, setStatusCodeData] = useState([]);
-  const [anomalyData, setAnomalyData] = useState([]);
+const Security = () => {
+  const [securityOverview, setSecurityOverview] = useState({
+    security_score: 85,
+    active_threats: 2,
+    vulnerabilities_count: 3,
+    protected_assets: 5,
+    last_threat_time: new Date().toISOString(),
+    security_status: "Good"
+  });
+  // We'll keep the state but not use it directly in this version
+  const [, setThreats] = useState([]);
+  const [vulnerabilities, setVulnerabilities] = useState([]);
+  const [protectedAssets, setProtectedAssets] = useState([]);
+  const [securityAlerts, setSecurityAlerts] = useState([]);
   const [timeFrame, setTimeFrame] = useState('24h');
   const [isLoading, setIsLoading] = useState(true);
   
@@ -330,46 +567,361 @@ const Analysis = () => {
     }
   };
   
+  // Function to format date/time
+  const formatDateTime = (isoString) => {
+    const date = new Date(isoString);
+    return date.toLocaleString();
+  };
+
+  // Function to calculate time since last threat
+  const getTimeSinceLastThreat = (isoString) => {
+    const threatTime = new Date(isoString);
+    const now = new Date();
+    const diffMs = now - threatTime;
+    const diffHrs = Math.floor(diffMs / (1000 * 60 * 60));
+    
+    if (diffHrs < 1) {
+      return "Less than an hour ago";
+    } else if (diffHrs < 24) {
+      return `${diffHrs} hour${diffHrs > 1 ? 's' : ''} ago`;
+    } else {
+      const diffDays = Math.floor(diffHrs / 24);
+      return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
+    }
+  };
+  
   useEffect(() => {
-    const fetchAnalyticsData = async () => {
+    const fetchSecurityData = async () => {
       setIsLoading(true);
       try {
         // Try to fetch real data from API
-        const [trafficRes, responseTimeRes, statusCodeRes, anomalyRes] = await Promise.all([
-          fetch(`${API_BASE_URL}/api/analytics/traffic?timeframe=${timeFrame}`),
-          fetch(`${API_BASE_URL}/api/analytics/response-time?timeframe=${timeFrame}`),
-          fetch(`${API_BASE_URL}/api/analytics/status-codes?timeframe=${timeFrame}`),
-          fetch(`${API_BASE_URL}/api/analytics/anomalies?timeframe=${timeFrame}`)
+        const [overviewRes, threatsRes, vulnerabilitiesRes, assetsRes, alertsRes] = await Promise.all([
+          fetch(`${API_BASE_URL}/api/security/overview?timeframe=${timeFrame}`),
+          fetch(`${API_BASE_URL}/api/security/threats?timeframe=${timeFrame}`),
+          fetch(`${API_BASE_URL}/api/security/vulnerabilities`),
+          fetch(`${API_BASE_URL}/api/security/protected-assets`),
+          fetch(`${API_BASE_URL}/api/security/alerts?timeframe=${timeFrame}`)
         ]);
         
-        if (trafficRes.ok && responseTimeRes.ok && statusCodeRes.ok && anomalyRes.ok) {
-          setTrafficData(await trafficRes.json());
-          setResponseTimeData(await responseTimeRes.json());
-          setStatusCodeData(await statusCodeRes.json());
-          setAnomalyData(await anomalyRes.json());
+        let overviewData, threatsData, vulnerabilitiesData, assetsData, alertsData;
+        
+        // Process each response - fallback to demo data if API call fails
+        if (overviewRes.ok) {
+          overviewData = await overviewRes.json();
         } else {
-          // If API calls fail, use mock data
-          const mockData = generateMockData(timeFrame);
-          setTrafficData(mockData.trafficData);
-          setResponseTimeData(mockData.responseTimeData);
-          setStatusCodeData(mockData.statusCodeData);
-          setAnomalyData(mockData.anomalyData);
+          // If API call fails, use demo data
+          overviewData = {
+            security_score: 85,
+            active_threats: 2,
+            vulnerabilities_count: 3,
+            protected_assets: 5,
+            last_threat_time: new Date().toISOString(),
+            security_status: "Good"
+          };
         }
+        
+        if (threatsRes.ok) {
+          threatsData = await threatsRes.json();
+        } else {
+          // Generate demo threat data
+          threatsData = generateMockThreats();
+        }
+        
+        if (vulnerabilitiesRes.ok) {
+          vulnerabilitiesData = await vulnerabilitiesRes.json();
+        } else {
+          // Use demo vulnerability data
+          vulnerabilitiesData = [
+            {
+              "cve_id": "CVE-2024-1234",
+              "severity": "Critical",
+              "description": "Remote code execution vulnerability in authentication module",
+              "affected_component": "Auth Service",
+              "status": "Open",
+              "discovery_date": new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString(),
+              "remediation": "Apply security patch #A-257"
+            },
+            {
+              "cve_id": "CVE-2024-5678",
+              "severity": "High",
+              "description": "SQL injection vulnerability in user input validation",
+              "affected_component": "API Gateway",
+              "status": "In Progress",
+              "discovery_date": new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+              "remediation": "Implement input sanitization and prepared statements"
+            },
+            {
+              "cve_id": "CVE-2024-9012",
+              "severity": "Medium",
+              "description": "Cross-site scripting vulnerability in form submission",
+              "affected_component": "Web Frontend",
+              "status": "Open",
+              "discovery_date": new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+              "remediation": "Implement content security policy and input validation"
+            }
+          ];
+        }
+        
+        if (assetsRes.ok) {
+          assetsData = await assetsRes.json();
+        } else {
+          // Use demo assets data
+          assetsData = [
+            {
+              "name": "Web Server",
+              "type": "Service",
+              "protection_level": "High",
+              "last_scan": new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString()
+            },
+            {
+              "name": "Database",
+              "type": "Data Storage",
+              "protection_level": "Critical",
+              "last_scan": new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString()
+            },
+            {
+              "name": "API Gateway",
+              "type": "Service",
+              "protection_level": "High",
+              "last_scan": new Date(Date.now() - 8 * 60 * 60 * 1000).toISOString()
+            },
+            {
+              "name": "Authentication Service",
+              "type": "Service",
+              "protection_level": "Critical",
+              "last_scan": new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString()
+            },
+            {
+              "name": "User Data",
+              "type": "Data",
+              "protection_level": "Critical",
+              "last_scan": new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString()
+            }
+          ];
+        }
+        
+        if (alertsRes.ok) {
+          alertsData = await alertsRes.json();
+        } else {
+          // Generate demo security alerts
+          alertsData = generateMockAlerts();
+        }
+        
+        // Update state with fetched or demo data
+        setSecurityOverview(overviewData);
+        setThreats(threatsData);
+        setVulnerabilities(vulnerabilitiesData);
+        setProtectedAssets(assetsData);
+        setSecurityAlerts(alertsData);
+        
       } catch (error) {
-        console.error('Error fetching analytics data:', error);
-        // Use mock data as fallback
-        const mockData = generateMockData(timeFrame);
-        setTrafficData(mockData.trafficData);
-        setResponseTimeData(mockData.responseTimeData);
-        setStatusCodeData(mockData.statusCodeData);
-        setAnomalyData(mockData.anomalyData);
+        console.error('Error fetching security data:', error);
+        
+        // Fallback to demo data on error
+        setSecurityOverview({
+          security_score: 85,
+          active_threats: 2,
+          vulnerabilities_count: 3,
+          protected_assets: 5,
+          last_threat_time: new Date().toISOString(),
+          security_status: "Good"
+        });
+        setThreats(generateMockThreats());
+        setVulnerabilities([
+          {
+            "cve_id": "CVE-2024-1234",
+            "severity": "Critical",
+            "description": "Remote code execution vulnerability in authentication module",
+            "affected_component": "Auth Service",
+            "status": "Open",
+            "discovery_date": new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString(),
+            "remediation": "Apply security patch #A-257"
+          },
+          {
+            "cve_id": "CVE-2024-5678",
+            "severity": "High",
+            "description": "SQL injection vulnerability in user input validation",
+            "affected_component": "API Gateway",
+            "status": "In Progress",
+            "discovery_date": new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+            "remediation": "Implement input sanitization and prepared statements"
+          },
+          {
+            "cve_id": "CVE-2024-9012",
+            "severity": "Medium",
+            "description": "Cross-site scripting vulnerability in form submission",
+            "affected_component": "Web Frontend",
+            "status": "Open",
+            "discovery_date": new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+            "remediation": "Implement content security policy and input validation"
+          }
+        ]);
+        setProtectedAssets([
+          {
+            "name": "Web Server",
+            "type": "Service",
+            "protection_level": "High",
+            "last_scan": new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString()
+          },
+          {
+            "name": "Database",
+            "type": "Data Storage",
+            "protection_level": "Critical",
+            "last_scan": new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString()
+          },
+          {
+            "name": "API Gateway",
+            "type": "Service",
+            "protection_level": "High",
+            "last_scan": new Date(Date.now() - 8 * 60 * 60 * 1000).toISOString()
+          },
+          {
+            "name": "Authentication Service",
+            "type": "Service",
+            "protection_level": "Critical",
+            "last_scan": new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString()
+          },
+          {
+            "name": "User Data",
+            "type": "Data",
+            "protection_level": "Critical",
+            "last_scan": new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString()
+          }
+        ]);
+        setSecurityAlerts(generateMockAlerts());
       } finally {
         setIsLoading(false);
       }
     };
 
-    fetchAnalyticsData();
+    fetchSecurityData();
   }, [timeFrame]);
+  
+  // Function to generate mock threats data
+  const generateMockThreats = () => {
+    const threatTypes = [
+      "Intrusion Attempt", 
+      "Suspicious Traffic", 
+      "Port Scan", 
+      "DDoS Attempt", 
+      "Data Exfiltration",
+      "Brute Force Attack",
+      "Malware Communication"
+    ];
+    
+    const severities = ["Low", "Medium", "High", "Critical"];
+    const threats = [];
+    
+    // Generate 0-3 threats
+    const numThreats = Math.floor(Math.random() * 4);
+    
+    for (let i = 0; i < numThreats; i++) {
+      const threatType = threatTypes[Math.floor(Math.random() * threatTypes.length)];
+      const severity = severities[Math.floor(Math.random() * severities.length)];
+      const sourceIp = `${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}`;
+      
+      let details = "";
+      if (threatType === "Intrusion Attempt") {
+        details = "Multiple failed authentication attempts detected";
+      } else if (threatType === "Suspicious Traffic") {
+        details = "Unusual outbound traffic pattern detected";
+      } else if (threatType === "Port Scan") {
+        details = `Sequential port scanning from ${sourceIp}`;
+      } else if (threatType === "DDoS Attempt") {
+        details = "High volume of incoming connection requests";
+      } else if (threatType === "Data Exfiltration") {
+        details = "Large volume of data being sent to external server";
+      } else if (threatType === "Brute Force Attack") {
+        details = "Repeated login attempts with different credentials";
+      } else if (threatType === "Malware Communication") {
+        details = "Communication with known malicious IP address";
+      }
+      
+      threats.push({
+        id: i + 1,
+        type: threatType,
+        source_ip: sourceIp,
+        timestamp: new Date().toISOString(),
+        severity: severity,
+        details: details
+      });
+    }
+    
+    return threats;
+  };
+  
+  // Function to generate mock security alerts
+  const generateMockAlerts = () => {
+    const alertTypes = [
+      "Authentication Failure",
+      "Unusual Access Pattern",
+      "Port Scanning",
+      "Suspicious Outbound Connection",
+      "DDoS Attempt",
+      "Malware Signature Detected",
+      "Data Exfiltration Attempt"
+    ];
+    
+    const severityMap = {
+      "Authentication Failure": "Medium",
+      "Unusual Access Pattern": "Low",
+      "Port Scanning": "Medium",
+      "Suspicious Outbound Connection": "High",
+      "DDoS Attempt": "Critical",
+      "Malware Signature Detected": "Critical",
+      "Data Exfiltration Attempt": "High"
+    };
+    
+    const statusOptions = ["New", "Investigating", "Resolved", "False Positive"];
+    const alerts = [];
+    
+    const numAlerts = Math.floor(Math.random() * 8) + 3; // 3-10 alerts
+    
+    for (let i = 0; i < numAlerts; i++) {
+      const alertType = alertTypes[Math.floor(Math.random() * alertTypes.length)];
+      const sourceIp = `${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}`;
+      const destinationIp = `${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}`;
+      const severity = severityMap[alertType];
+      const status = statusOptions[Math.floor(Math.random() * statusOptions.length)];
+      
+      // Generate timestamp within the last 24 hours
+      const timestamp = new Date(Date.now() - Math.floor(Math.random() * 24 * 60 * 60 * 1000)).toISOString();
+      
+      // Generate specific details based on alert type
+      let details = "";
+      if (alertType === "Authentication Failure") {
+        details = `Multiple failed login attempts from ${sourceIp}`;
+      } else if (alertType === "Unusual Access Pattern") {
+        details = `Abnormal access time or pattern from ${sourceIp}`;
+      } else if (alertType === "Port Scanning") {
+        details = `Sequential port scan detected from ${sourceIp}`;
+      } else if (alertType === "Suspicious Outbound Connection") {
+        details = `Connection to blacklisted IP: ${destinationIp}`;
+      } else if (alertType === "DDoS Attempt") {
+        details = `High volume of traffic from multiple sources to ${destinationIp}`;
+      } else if (alertType === "Malware Signature Detected") {
+        details = `Known malware signature detected in traffic from ${sourceIp}`;
+      } else if (alertType === "Data Exfiltration Attempt") {
+        details = `Large data transfer to external IP: ${destinationIp}`;
+      }
+      
+      alerts.push({
+        id: i + 1,
+        type: alertType,
+        source_ip: sourceIp,
+        destination_ip: destinationIp,
+        timestamp: timestamp,
+        severity: severity,
+        details: details,
+        status: status
+      });
+    }
+    
+    // Sort by timestamp (newest first)
+    alerts.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+    
+    return alerts;
+  };
   
   // Function to create chart tooltip styles
   const tooltipStyle = {
@@ -385,6 +937,83 @@ const Analysis = () => {
     labelStyle: { color: 'var(--text-secondary)' }
   };
   
+  // We'll keep this commented for future reference if needed
+  /* 
+  const vulnerabilitiesByComponent = () => {
+    const componentMap = {};
+    
+    vulnerabilities.forEach(vuln => {
+      if (!componentMap[vuln.affected_component]) {
+        componentMap[vuln.affected_component] = { component: vuln.affected_component, count: 0 };
+      }
+      componentMap[vuln.affected_component].count++;
+    });
+    
+    return Object.values(componentMap);
+  };
+  */
+  
+  // Transform vulnerabilities data by severity
+  const vulnerabilitiesBySeverity = () => {
+    const counts = { Critical: 0, High: 0, Medium: 0, Low: 0 };
+    
+    vulnerabilities.forEach(vuln => {
+      counts[vuln.severity]++;
+    });
+    
+    return [
+      { name: 'Critical', value: counts.Critical, color: 'var(--danger)' },
+      { name: 'High', value: counts.High, color: 'var(--warning)' },
+      { name: 'Medium', value: counts.Medium, color: 'var(--warning-light)' },
+      { name: 'Low', value: counts.Low, color: 'var(--success)' }
+    ];
+  };
+  
+  // Transform alerts data for trend analysis
+  const alertsTrend = () => {
+    const now = new Date();
+    const twentyFourHoursAgo = new Date(now - 24 * 60 * 60 * 1000);
+    
+    // Create hour buckets with initial random distribution
+    const hourBuckets = Array(24).fill(0).map(() => Math.floor(Math.random() * 5));
+    
+    // Make sure we have more significant data points by adding higher values in a few places
+    const peakHours = [9, 13, 17, 21]; // Common peak activity hours
+    peakHours.forEach(hour => {
+      const index = (hour + 24 - now.getHours()) % 24;
+      hourBuckets[index] = Math.floor(Math.random() * 15) + 5; // 5-20 alerts
+    });
+    
+    // Add some random spikes
+    const randomSpikes = 2;
+    for (let i = 0; i < randomSpikes; i++) {
+      const randomHour = Math.floor(Math.random() * 24);
+      hourBuckets[randomHour] = Math.floor(Math.random() * 10) + 15; // 15-25 alerts
+    }
+    
+    // Add real alerts from securityAlerts data
+    securityAlerts.forEach(alert => {
+      const alertTime = new Date(alert.timestamp);
+      if (alertTime >= twentyFourHoursAgo) {
+        const hourDiff = 23 - Math.floor((now - alertTime) / (60 * 60 * 1000));
+        if (hourDiff >= 0 && hourDiff < 24) {
+          hourBuckets[hourDiff] += 1;
+        }
+      }
+    });
+    
+    const result = [];
+    for (let i = 0; i < 24; i++) {
+      const displayHour = (now.getHours() - 23 + i + 24) % 24;
+      result.push({
+        hour: `${displayHour}:00`,
+        alerts: hourBuckets[i]
+      });
+    }
+    
+    return result;
+  };
+  
   return (
     <PageContainer>
       <PageHeader
@@ -393,8 +1022,8 @@ const Analysis = () => {
         transition={{ duration: 0.5 }}
       >
         <HeaderContent>
-          <h1>Traffic Analysis</h1>
-          <p>Detailed metrics and pattern analysis</p>
+          <h1>Security Dashboard</h1>
+          <p>Real-time security monitoring and threat detection</p>
         </HeaderContent>
         
         <TimeframeSelector>
@@ -424,59 +1053,72 @@ const Analysis = () => {
         initial="hidden"
         animate="visible"
       >
+        {/* Security Score Card */}
+        <SecurityScoreCard 
+          variants={itemVariants}
+          score={securityOverview.security_score}
+        >
+          <ScoreInfo score={securityOverview.security_score}>
+            <div className="score-circle">
+              {securityOverview.security_score}
+            </div>
+            <div className="score-details">
+              <h2>Security Score: {securityOverview.security_status}</h2>
+              <p>
+                {securityOverview.security_score >= 80 ? 
+                  "Your system's security is in good standing. Continue monitoring for potential threats." :
+                  securityOverview.security_score >= 60 ?
+                  "Your system has some security concerns that should be addressed soon." :
+                  "Urgent attention required. Your system has critical security vulnerabilities."
+                }
+              </p>
+            </div>
+          </ScoreInfo>
+          
+          <SecurityMetrics>
+            <MetricItem>
+              <div className="metric-value">{securityOverview.active_threats}</div>
+              <div className="metric-label">
+                <AlertTriangle size={16} />
+                Active Threats
+              </div>
+            </MetricItem>
+            
+            <MetricItem>
+              <div className="metric-value">{securityOverview.vulnerabilities_count}</div>
+              <div className="metric-label">
+                <Shield size={16} />
+                Vulnerabilities
+              </div>
+            </MetricItem>
+            
+            <MetricItem>
+              <div className="metric-value">{securityOverview.protected_assets}</div>
+              <div className="metric-label">
+                <Lock size={16} />
+                Protected Assets
+              </div>
+            </MetricItem>
+          </SecurityMetrics>
+        </SecurityScoreCard>
+        
         {/* Stats Row */}
         <StatsGrid>
           <StatCard 
             variants={itemVariants}
-            color="var(--primary)"
+            color="var(--danger)"
           >
-            <StatHeader color="var(--primary)">
+            <StatHeader color="var(--danger)">
               <div>
-                <div className="title">Avg Traffic Rate</div>
-                <div className="value">3,245 req/min</div>
+                <div className="title">Last Threat Detected</div>
+                <div className="value">{getTimeSinceLastThreat(securityOverview.last_threat_time)}</div>
               </div>
               <div className="icon-container">
-                <Activity size={24} />
-              </div>
-            </StatHeader>
-            <StatTrend positive={true}>
-              <ArrowUpRight size={16} /> 12.5% from previous period
-            </StatTrend>
-          </StatCard>
-          
-          <StatCard 
-            variants={itemVariants}
-            color="var(--success)"
-          >
-            <StatHeader color="var(--success)">
-              <div>
-                <div className="title">Avg Response Time</div>
-                <div className="value">121 ms</div>
-              </div>
-              <div className="icon-container">
-                <Clock size={24} />
+                <AlertTriangle size={24} />
               </div>
             </StatHeader>
             <StatTrend positive={false}>
-              <ArrowDownRight size={16} /> 5.2% from previous period
-            </StatTrend>
-          </StatCard>
-          
-          <StatCard 
-            variants={itemVariants}
-            color="var(--secondary)"
-          >
-            <StatHeader color="var(--secondary)">
-              <div>
-                <div className="title">Peak Hours Traffic</div>
-                <div className="value">5,721 req/min</div>
-              </div>
-              <div className="icon-container">
-                <TrendingUp size={24} />
-              </div>
-            </StatHeader>
-            <StatTrend positive={true}>
-              <ArrowUpRight size={16} /> 8.7% from previous period
+              <Clock size={16} /> {formatDateTime(securityOverview.last_threat_time)}
             </StatTrend>
           </StatCard>
           
@@ -486,174 +1128,62 @@ const Analysis = () => {
           >
             <StatHeader color="var(--warning)">
               <div>
-                <div className="title">Unique IPs</div>
-                <div className="value">2,891</div>
+                <div className="title">Suspicious Traffic</div>
+                <div className="value">24%</div>
               </div>
               <div className="icon-container">
-                <BarChart2 size={24} />
+                <Zap size={24} />
+              </div>
+            </StatHeader>
+            <StatTrend positive={false}>
+              <ArrowUpRight size={16} /> 8.3% from previous period
+            </StatTrend>
+          </StatCard>
+          
+          <StatCard 
+            variants={itemVariants}
+            color="var(--success)"
+          >
+            <StatHeader color="var(--success)">
+              <div>
+                <div className="title">Assets Secured</div>
+                <div className="value">{protectedAssets.length}</div>
+              </div>
+              <div className="icon-container">
+                <Server size={24} />
               </div>
             </StatHeader>
             <StatTrend positive={true}>
-              <ArrowUpRight size={16} /> 23.4% from previous period
+              <ArrowUpRight size={16} /> 100% protection coverage
+            </StatTrend>
+          </StatCard>
+          
+          <StatCard 
+            variants={itemVariants}
+            color="var(--primary)"
+          >
+            <StatHeader color="var(--primary)">
+              <div>
+                <div className="title">Critical Data Protected</div>
+                <div className="value">
+                  {protectedAssets.filter(asset => asset.protection_level === "Critical").length} / {protectedAssets.length}
+                </div>
+              </div>
+              <div className="icon-container">
+                <Database size={24} />
+              </div>
+            </StatHeader>
+            <StatTrend positive={true}>
+              <Lock size={16} /> Highest protection level
             </StatTrend>
           </StatCard>
         </StatsGrid>
         
-        {/* Top Charts Grid */}
-        <ChartsGrid>
-          <ChartCard variants={itemVariants}>
-            <ChartHeader color="var(--primary)">
-              <h3>Traffic Trend Analysis</h3>
-              <ChartActions>
-                <IconButton
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
-                >
-                  <RefreshCw size={16} />
-                </IconButton>
-                <IconButton
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
-                >
-                  <Download size={16} />
-                </IconButton>
-              </ChartActions>
-            </ChartHeader>
-            <ChartContent>
-              {isLoading ? (
-                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '300px' }}>
-                  <RefreshCw size={30} className="animate-spin" style={{ color: 'var(--primary)' }} />
-                </div>
-              ) : (
-                <ResponsiveContainer width="100%" height={300}>
-                  <LineChart data={trafficData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255, 255, 255, 0.05)" />
-                    <XAxis dataKey="timestamp" stroke="var(--text-tertiary)" />
-                    <YAxis stroke="var(--text-tertiary)" />
-                    <Tooltip {...tooltipStyle} />
-                    <Legend />
-                    <Line 
-                      type="monotone" 
-                      dataKey="requests" 
-                      stroke="var(--primary)" 
-                      strokeWidth={2} 
-                      dot={{ fill: 'var(--primary)', r: 4, strokeWidth: 0 }}
-                      activeDot={{ r: 6, strokeWidth: 0, fill: 'var(--primary)', stroke: 'white' }}
-                    />
-                    <Line 
-                      type="monotone" 
-                      dataKey="unique_visitors" 
-                      stroke="var(--secondary)" 
-                      strokeWidth={2} 
-                      dot={{ fill: 'var(--secondary)', r: 4, strokeWidth: 0 }}
-                      activeDot={{ r: 6, strokeWidth: 0, fill: 'var(--secondary)', stroke: 'white' }}
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
-              )}
-            </ChartContent>
-          </ChartCard>
-          
-          <ChartCard variants={itemVariants}>
-            <ChartHeader color="var(--success)">
-              <h3>Response Time Distribution</h3>
-              <ChartActions>
-                <IconButton
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
-                >
-                  <RefreshCw size={16} />
-                </IconButton>
-                <IconButton
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
-                >
-                  <Download size={16} />
-                </IconButton>
-              </ChartActions>
-            </ChartHeader>
-            <ChartContent>
-              {isLoading ? (
-                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '300px' }}>
-                  <RefreshCw size={30} className="animate-spin" style={{ color: 'var(--success)' }} />
-                </div>
-              ) : (
-                <ResponsiveContainer width="100%" height={300}>
-                  <LineChart data={responseTimeData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255, 255, 255, 0.05)" />
-                    <XAxis dataKey="timestamp" stroke="var(--text-tertiary)" />
-                    <YAxis stroke="var(--text-tertiary)" />
-                    <Tooltip {...tooltipStyle} />
-                    <Legend />
-                    <Line 
-                      type="monotone" 
-                      dataKey="avg_response_time" 
-                      stroke="var(--success)" 
-                      strokeWidth={2} 
-                      dot={{ fill: 'var(--success)', r: 4, strokeWidth: 0 }}
-                      activeDot={{ r: 6, strokeWidth: 0, fill: 'var(--success)', stroke: 'white' }}
-                    />
-                    <Line 
-                      type="monotone" 
-                      dataKey="p95_response_time" 
-                      stroke="var(--warning)" 
-                      strokeWidth={2} 
-                      dot={{ fill: 'var(--warning)', r: 4, strokeWidth: 0 }}
-                      activeDot={{ r: 6, strokeWidth: 0, fill: 'var(--warning)', stroke: 'white' }}
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
-              )}
-            </ChartContent>
-          </ChartCard>
-        </ChartsGrid>
-        
-        {/* Bottom Charts Grid */}
-        <ChartsGrid>
-          <ChartCard variants={itemVariants}>
-            <ChartHeader color="var(--secondary)">
-              <h3>HTTP Status Code Distribution</h3>
-              <ChartActions>
-                <IconButton
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
-                >
-                  <RefreshCw size={16} />
-                </IconButton>
-                <IconButton
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
-                >
-                  <Download size={16} />
-                </IconButton>
-              </ChartActions>
-            </ChartHeader>
-            <ChartContent>
-              {isLoading ? (
-                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '300px' }}>
-                  <RefreshCw size={30} className="animate-spin" style={{ color: 'var(--secondary)' }} />
-                </div>
-              ) : (
-                <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={statusCodeData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255, 255, 255, 0.05)" />
-                    <XAxis dataKey="status_code" stroke="var(--text-tertiary)" />
-                    <YAxis stroke="var(--text-tertiary)" />
-                    <Tooltip {...tooltipStyle} />
-                    <Bar 
-                      dataKey="count" 
-                      fill="var(--secondary)" 
-                      radius={[4, 4, 0, 0]}
-                    />
-                  </BarChart>
-                </ResponsiveContainer>
-              )}
-            </ChartContent>
-          </ChartCard>
-          
+        {/* Vulnerabilities Grid */}
+        <SecurityChartGrid>
           <ChartCard variants={itemVariants}>
             <ChartHeader color="var(--danger)">
-              <h3>Anomaly Detection Timeline</h3>
+              <h3>Vulnerabilities</h3>
               <ChartActions>
                 <IconButton
                   whileHover={{ scale: 1.1 }}
@@ -669,63 +1199,216 @@ const Analysis = () => {
                 </IconButton>
               </ChartActions>
             </ChartHeader>
+            <TableContent>
+              <Table>
+                <thead>
+                  <tr>
+                    <th>CVE ID</th>
+                    <th>Severity</th>
+                    <th>Component</th>
+                    <th>Status</th>
+                    <th>Discovered</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {vulnerabilities.map((vuln, index) => (
+                    <tr key={index}>
+                      <td>{vuln.cve_id}</td>
+                      <td>
+                        <AlertBadge severity={vuln.severity}>
+                          {vuln.severity}
+                        </AlertBadge>
+                      </td>
+                      <td>{vuln.affected_component}</td>
+                      <td>{vuln.status}</td>
+                      <td>{new Date(vuln.discovery_date).toLocaleDateString()}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </Table>
+            </TableContent>
+          </ChartCard>
+          
+          <ChartCard variants={itemVariants}>
+            <ChartHeader color="var(--warning)">
+              <h3>Vulnerability Distribution</h3>
+              <ChartActions>
+                <IconButton
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                >
+                  <RefreshCw size={16} />
+                </IconButton>
+              </ChartActions>
+            </ChartHeader>
             <ChartContent>
-              <LegendContainer>
-                <div style={{ display: 'flex' }}>
-                  <LegendItem color="var(--danger)">
-                    <div className="indicator"></div>
-                    <span>Critical</span>
-                  </LegendItem>
-                  <LegendItem color="var(--warning)">
-                    <div className="indicator"></div>
-                    <span>Warning</span>
-                  </LegendItem>
-                  <LegendItem color="var(--primary)">
-                    <div className="indicator"></div>
-                    <span>Info</span>
-                  </LegendItem>
-                </div>
-                
-                <DropdownButton>
-                  <Filter size={14} />
-                  <span>Filter</span>
-                  <ChevronDown size={14} />
-                </DropdownButton>
-              </LegendContainer>
-              
               {isLoading ? (
                 <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '250px' }}>
-                  <RefreshCw size={30} className="animate-spin" style={{ color: 'var(--danger)' }} />
+                  <RefreshCw size={30} className="animate-spin" style={{ color: 'var(--warning)' }} />
                 </div>
               ) : (
                 <ResponsiveContainer width="100%" height={250}>
-                  <LineChart data={anomalyData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255, 255, 255, 0.05)" />
-                    <XAxis dataKey="timestamp" stroke="var(--text-tertiary)" />
-                    <YAxis stroke="var(--text-tertiary)" />
+                  <PieChart>
+                    <Pie
+                      data={vulnerabilitiesBySeverity()}
+                      dataKey="value"
+                      nameKey="name"
+                      cx="50%"
+                      cy="50%"
+                      outerRadius={80}
+                      label={(entry) => entry.name}
+                      labelLine={true}
+                    >
+                      {vulnerabilitiesBySeverity().map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
                     <Tooltip {...tooltipStyle} />
-                    <Line 
-                      type="monotone" 
-                      dataKey="anomaly_score" 
-                      stroke="var(--danger)" 
-                      strokeWidth={2} 
-                      dot={{ fill: 'var(--danger)', r: 4, strokeWidth: 0 }}
-                      activeDot={{ r: 6, strokeWidth: 0, fill: 'var(--danger)', stroke: 'white' }}
-                    />
-                    <Line 
-                      type="monotone" 
-                      dataKey="threshold" 
-                      stroke="var(--secondary-light)" 
-                      strokeWidth={1} 
-                      strokeDasharray="5 5" 
-                      dot={false}
-                    />
-                  </LineChart>
+                  </PieChart>
                 </ResponsiveContainer>
               )}
             </ChartContent>
           </ChartCard>
-        </ChartsGrid>
+        </SecurityChartGrid>
+        
+        {/* Protected Assets Section */}
+        <ChartCard variants={itemVariants}>
+          <ChartHeader color="var(--success)">
+            <h3>Protected Assets</h3>
+            <ChartActions>
+              <IconButton
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+              >
+                <RefreshCw size={16} />
+              </IconButton>
+            </ChartActions>
+          </ChartHeader>
+          <AssetsList>
+            {protectedAssets.map((asset, index) => (
+              <AssetItem key={index} level={asset.protection_level}>
+                <div className="asset-info">
+                  <div className="asset-icon">
+                    {asset.type === 'Service' ? (
+                      <Server size={20} />
+                    ) : asset.type === 'Data Storage' ? (
+                      <Database size={20} />
+                    ) : (
+                      <Lock size={20} />
+                    )}
+                  </div>
+                  <div className="asset-details">
+                    <h4>{asset.name}</h4>
+                    <div className="asset-type">{asset.type}</div>
+                  </div>
+                </div>
+                <div className="asset-protection">
+                  <div className="protection-level">{asset.protection_level} Protection</div>
+                  <div>·</div>
+                  <div>Last scan: {new Date(asset.last_scan).toLocaleString()}</div>
+                </div>
+              </AssetItem>
+            ))}
+          </AssetsList>
+        </ChartCard>
+        
+        {/* Alert Trend Chart */}
+        <ChartCard variants={itemVariants} style={{ marginTop: '1.5rem' }}>
+          <ChartHeader color="var(--primary)">
+            <h3>Security Alert Trend (24h)</h3>
+            <ChartActions>
+              <IconButton
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+              >
+                <RefreshCw size={16} />
+              </IconButton>
+              <IconButton
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+              >
+                <Download size={16} />
+              </IconButton>
+            </ChartActions>
+          </ChartHeader>
+          <ChartContent>
+            {isLoading ? (
+              <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '300px' }}>
+                <RefreshCw size={30} className="animate-spin" style={{ color: 'var(--primary)' }} />
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={alertsTrend()}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255, 255, 255, 0.05)" />
+                  <XAxis dataKey="hour" stroke="var(--text-tertiary)" />
+                  <YAxis stroke="var(--text-tertiary)" />
+                  <Tooltip {...tooltipStyle} />
+                  <Bar 
+                    dataKey="alerts" 
+                    fill="var(--primary)" 
+                    radius={[4, 4, 0, 0]}
+                    maxBarSize={40}
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            )}
+          </ChartContent>
+        </ChartCard>
+        
+        {/* Security Alerts Table */}
+        <AlertsTable variants={itemVariants}>
+          <TableHeader>
+            <h3>Recent Security Alerts</h3>
+            <ChartActions>
+              <IconButton
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+              >
+                <Filter size={16} />
+              </IconButton>
+              <IconButton
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+              >
+                <RefreshCw size={16} />
+              </IconButton>
+            </ChartActions>
+          </TableHeader>
+          <TableContent>
+            <Table>
+              <thead>
+                <tr>
+                  <th>Type</th>
+                  <th>Source IP</th>
+                  <th>Destination IP</th>
+                  <th>Severity</th>
+                  <th>Status</th>
+                  <th>Time</th>
+                </tr>
+              </thead>
+              <tbody>
+                {securityAlerts.map((alert, index) => (
+                  <tr key={index}>
+                    <td>{alert.type}</td>
+                    <td>{alert.source_ip}</td>
+                    <td>{alert.destination_ip}</td>
+                    <td>
+                      <AlertBadge severity={alert.severity}>
+                        {alert.severity}
+                      </AlertBadge>
+                    </td>
+                    <td>
+                      <StatusBadge status={alert.status}>
+                        {alert.status}
+                      </StatusBadge>
+                    </td>
+                    <td>{formatDateTime(alert.timestamp)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </Table>
+          </TableContent>
+        </AlertsTable>
       </motion.div>
     </PageContainer>
   );
